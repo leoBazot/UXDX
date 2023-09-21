@@ -5,20 +5,16 @@ import SearchArtist from './components/SearchArtist.vue';
 
 <template>
     <header>
-        <!-- <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" /> -->
-
         <div class="wrapper">
-            <!-- <HelloWorld msg="You did it!" /> -->
             <SearchArtist />
         </div>
     </header>
-
     <main>
         <Artist name="Imagine Dragon" />
     </main>
 </template>
 
-<style scoped>
+<!-- <style scoped>
 header {
     line-height: 1.5;
 }
@@ -55,3 +51,4 @@ header {
     }
 }
 </style>
+ -->
