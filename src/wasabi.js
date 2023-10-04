@@ -8,7 +8,4 @@ function fullTextSearch(search) {
     return searchRequest(`fulltext/${search}`)
 }
 
-
-
-
 export { getArtistByName, fullTextSearch }
