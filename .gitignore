@@ -2,6 +2,8 @@ wasabi-song-dump.json
 
 .vscode
 
+data.json
+
 # Logs
 logs
 *.log
