@@ -4,6 +4,10 @@ var database = await getAllArtistsTmp();
 
 const CURRENT_YEAR = new Date().getFullYear()
 
+const SONG_KEYS = ["artist", "country", "age", "language", "bpm", "genre", "releaseDate", "nbExplicit"]
+
+const selections = new Map();
+
 /* MODE */
 
 const MODE = {
@@ -12,8 +16,6 @@ const MODE = {
 }
 
 var mode = MODE.ALL
-
-const SONG_KEYS = ["artist", "country", "age", "language", "bpm", "genre", "releaseDate", "nbExplicit"]
 
 // default is age
 var colorBase = SONG_KEYS[2]
@@ -157,7 +159,7 @@ select.addEventListener("change", () => {
 
 // set the dimensions and margins of the graph
 const margin = { top: 30, right: 10, bottom: 10, left: 0 },
-    width = 1500 - margin.left - margin.right,
+    width = (SONG_KEYS.length * 200) - margin.left - margin.right,
     height = /*30*/800 - margin.top - margin.bottom;
 
 // append the svg object to the body of the page
@@ -168,6 +170,8 @@ var svg = d3.select("#my_dataviz")
     .append("g")
     .attr("transform",
         "translate(" + margin.left + "," + margin.top + ")");
+
+
 
 function createParalleleCoordinates(dimensions, data) {
     // For each dimension, I build a linear scale. I store all in a y object
@@ -204,40 +208,87 @@ function createParalleleCoordinates(dimensions, data) {
         .domain(dimensions);
 
     // Create color scale
-    const color = d3.scaleSequential(y[colorBase].domain(), t => d3.interpolateBrBG(1 - t));
+    const color = d3.scaleOrdinal(d3["schemeSet1"])
+        .domain(y[colorBase].domain());
+    //d3.scaleSequential(y[colorBase].domain(), (t) => [d3.interpolateBrBG(1 - t)]);
 
     // The path function take a row of the csv as input, and return x and y coordinates of the line to draw for this raw.
-    function path(d) {
+    function createPath(d) {
         return d3.line()(dimensions.map(function (p) { return [x(p), y[p](d[p])]; }));
     }
 
     // Draw the lines
-    svg
-        .selectAll("myPath")
+    const path = svg.selectAll("myPath")
         .data(data.slice().sort((a, b) => d3.ascending(a[colorBase], b[colorBase])))
         // .attr("stroke", d => color(d[colorBase]))
         .enter().append("path")
-        .attr("d", path)
+        .attr("stroke", d => color(d[colorBase]))
+        .attr("d", createPath)
         .style("fill", "none")
-        .style("stroke", "#69b3a2")
+        //.attr("stroke", d => color(d[colorBase]))
+        // .style("stroke", "#69b3a2")
         .style("opacity", 0.5)
+        .call(path => path.append("title")
+            .text(d => d.name))
 
     // Draw the axis:
-    svg.selectAll("myAxis")
+    const axes = svg.append("g") // .selectAll("myAxis")
+        .selectAll("g")
         // For each dimension of the dataset add a 'g' element:
-        .data(dimensions).enter()
+        .data(dimensions)
+        .enter()
         .append("g")
         // Translate this element to its right position on the x axis
         .attr("transform", function (d) { return "translate(" + x(d) + ")"; })
         // Build the axis with the call function
-        .each(function (d) { d3.select(this).call(d3.axisLeft().scale(y[d])); })
+        .each(function (d) { d3.select(this).call(d3.axisLeft(y[d])); })
         // Add axis title
-        .append("text")
-        .style("text-anchor", "middle")
-        .attr("y", -9)
-        .text(function (d) { return d; })
-        .style("fill", "black")
+        // .append("text")
+        .call(g => g.append("text")
+            .attr("x", margin.bottom)
+            .attr("y", -6)
+            .attr("text-anchor", "start")
+            .attr("fill", "currentColor")
+            .text(d => d))
+        .call(g => g.selectAll("text")
+            .clone(true).lower()
+            .attr("fill", "none")
+            .attr("stroke-width", 4)
+            .attr("stroke-linejoin", "round")
+            .attr("stroke", "white"));
+    // .style("text-anchor", "middle")
+    // .attr("y", -9)
+    // .text(function (d) { return d; })
+    // .style("fill", "black")
 
+    // Create the brush behavior.
+    const brushWidth = 50;
+    const brush = d3.brushY()
+        .extent([
+            [-(brushWidth / 2), margin.left],
+            [brushWidth / 2, width - margin.right]
+        ])
+        .on("start brush end", brushed);
+
+    axes.call(brush);
+    console.log(axes)
+
+    function brushed(test, key) {
+        console.log(test)
+        const deselectedColor = "#ddd";
+        if (selection === null) selections.delete(key);
+        else selections.set(key, selection.map(x.get(key).invert));
+        const selected = [];
+        path.each(function (d) {
+            const active = Array.from(selections).every(([key, [min, max]]) => d[key] >= min && d[key] <= max);
+            d3.select(this).style("stroke", active ? color(d[keyz]) : deselectedColor);
+            if (active) {
+                d3.select(this).raise();
+                selected.push(d);
+            }
+        });
+        svg.property("value", selected).dispatch("input");
+    }
 }
 
 var few = database.slice(0, 50)
