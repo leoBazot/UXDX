@@ -21,13 +21,20 @@ var mode = MODE.ALL
 var colorBase = SONG_KEYS[2]
 
 /* UTILS */
-
 function getGenres(artist) {
     return artist.genres?.length === 0 ? artist.dbp_genre : artist.genres
 }
 
 function getAge(artist) {
-    return artist.lifeSpan?.begin === "" ? 0 : (artist.lifeSpan?.ended ? artist.lifeSpan?.end : CURRENT_YEAR) - artist.lifeSpan?.begin
+    var result = 0
+    var beginSplit = artist.lifeSpan?.begin?.split("-")
+    var endSplit = artist.lifeSpan?.end?.split("-")
+    if (beginSplit?.length != 1 || endSplit?.length != 1) {
+        result = beginSplit[0] === "" ? 0 : (artist.lifeSpan?.ended ? endSplit[0] - beginSplit[0] : CURRENT_YEAR - beginSplit[0])
+    } else {
+        result = artist.lifeSpan?.begin === "" ? 0 : (artist.lifeSpan?.ended ? artist.lifeSpan?.end : CURRENT_YEAR) - artist.lifeSpan?.begin
+    }
+    return result
 }
 
 function getCountry(artist) {
@@ -82,7 +89,7 @@ function getSongsByArtist(artist) {
         stats.age = getAge(artist)
         stats.genre = g
         stats.nbExplicit = artist.albums.map(album => album.songs.map(song => song.explicit_content_lyrics ?? 0)).flat().reduce((a, b) => a + b, 0)
-        stats.deezerFans = artist.deezerFans
+        stats.deezerFans = artist.deezerFans ?? 0
 
         result.push(stats)
     })
@@ -133,7 +140,7 @@ function getAllCountry(data) {
 }
 
 /* FILL COLOR FILTER LIST */
-var select = document.getElementById("colorFilter")
+var colorFilter = document.getElementById("colorFilter")
 
 SONG_KEYS.forEach(key => {
     var opt = key;
@@ -143,43 +150,31 @@ SONG_KEYS.forEach(key => {
     if (key === colorBase) {
         el.selected = true
     }
-    select.appendChild(el);
+    colorFilter.appendChild(el);
 })
 
-/* EVENT ON ARTIST SELECTION CHANGE */
-select.addEventListener("change", () => {
-    console.log(select.value)
-})
+
 
 // set the dimensions and margins of the graph
 const margin = { top: 30, right: 10, bottom: 10, left: 0 },
     width = (SONG_KEYS.length * 200) - margin.left - margin.right,
     height = 800 - margin.top - margin.bottom;
 
-// append the svg object to the body of the page
-var svg = d3.select("#my_dataviz")
-    .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform",
-        "translate(" + margin.left + "," + margin.top + ")");
+
 
 
 
 function createParalleleCoordinates(dimensions, data) {
+    d3.select("#my_dataviz > *").remove()
 
-    /* FILL ARTIST LIST */
-    var select = document.getElementById("selectArtist")
-    var options = getAllNames(data);
-
-    for (var i = 0; i < options.length; i++) {
-        var opt = options[i];
-        var el = document.createElement("option");
-        el.textContent = opt;
-        el.value = opt;
-        select.appendChild(el);
-    }
+    // append the svg object to the body of the page
+    var svg = d3.select("#my_dataviz")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
 
     // For each dimension, I build a linear scale. I store all in a y object
     var y = {}
@@ -209,9 +204,16 @@ function createParalleleCoordinates(dimensions, data) {
         .range([0, width])
         .padding(1)
         .domain(dimensions);
+    function setupColorScale() {
+        if (y[colorBase].domain()[0] === 0) {
+            return d3.scaleSequential().domain(y[colorBase].domain()).interpolator((t) => d3.interpolateSpectral(0 + t));
+        } else {
+            return d3.scaleOrdinal().domain(y[colorBase].domain()).range(["red", "yellow", "green", "blue"])
+        }
+    }
 
     // Create color scale
-    const color = d3.scaleSequential().domain(y[colorBase].domain()).interpolator((t) => d3.interpolateBrBG(0 + t));
+    const color = setupColorScale() // d3.scaleSequential().domain(y[colorBase].domain()).interpolator((t) => d3.interpolateSpectral(0 + t));
 
     // Append the lines.
     const line = d3.line()
@@ -223,14 +225,13 @@ function createParalleleCoordinates(dimensions, data) {
     const path = svg.append("g")
         .style("fill", "none")
         .attr("stroke-width", 1.5)
-        .attr("stroke-opacity", 0.4)
+        .attr("stroke-opacity", 1)
         .selectAll("path")
         .data(data.slice().sort((a, b) => d3.ascending(a[colorBase], b[colorBase])))
         .enter().append("path")
         .attr("stroke", d => color(d[colorBase]))
         .attr("d", d => line(d3.cross(dimensions, [d], (key, d) => [key, d[key]])))// d3.line()(dimensions.map(function (p) { return [x(p), y[p](d[p])]; })))
         // .style("stroke", "#69b3a2")
-        .style("opacity", 0.5)
         .call(path => path.append("title")
             .text(d => d.name))
 
@@ -270,42 +271,35 @@ function createParalleleCoordinates(dimensions, data) {
         .on("start brush end", brushed);
 
     axes.call(brush);
-    var tmp = true
 
     function brushed(key, index) {
         var select = d3.event.selection
-
-
         const deselectedColor = "#dddddd";
         if (select === null) {
             selections.delete(key);
+        } else if (y[key].invert !== undefined) {
+            selections.set(key, select.map(y[key].invert).reverse())
         } else {
             var elemList = _.uniq(data.map(d => d[key]))
             var nbElem = elemList.length
             var hPerElem = height / nbElem
-            console.log(height)
-            console.log("nbElem: " + nbElem + " hPerElem: " + hPerElem)
-            console.log("inf :" + select[0] + " sup: " + select[1]);
-            console.log("inf :" + select[0] / hPerElem + " sup: " + select[1] / hPerElem);
-            var bandInf = Math.ceil(select[0] / hPerElem)
-
-            var bandSup = Math.round(select[1] / hPerElem)
-            bandSup = (bandSup > nbElem ? nbElem : bandSup) - 1
-            bandSup = bandSup < bandInf ? bandInf : bandSup
-            console.log(bandInf + " < " + bandSup)
+            var bandInf = select[0] / hPerElem
+            var bandSup = select[1] / hPerElem
             selections.set(key, [bandInf, bandSup]);
         }
 
         const selected = [];
         path.each(function (d) {
-
-            if (tmp) {
-                tmp = false;
-                console.log(d)
-            }
             const active = Array.from(selections).every(([key, [min, max]]) => {
-                var eIndex = _.uniq(data.map(d => d[key])).findIndex(e => e === d[key])
-                return eIndex >= min && eIndex <= max
+                var result = false
+                if (y[key].invert === undefined) {
+                    var eIndex = _.uniq(data.map(d => d[key])).findIndex(e => e === d[key])
+                    result = eIndex >= min && eIndex <= max
+                } else {
+                    result = d[key] >= min && d[key] <= max;
+                }
+
+                return result
             });
             d3.select(this).style("stroke", active ? color(d[colorBase]) : deselectedColor);
             if (active) {
@@ -313,8 +307,11 @@ function createParalleleCoordinates(dimensions, data) {
                 selected.push(d);
             }
         });
+
+
         svg.property("value", selected).dispatch("input");
     }
+
 
     // viewof selection = Object.assign(svg.property("value", data).node(), { scales: { color } })
 }
@@ -322,5 +319,10 @@ function createParalleleCoordinates(dimensions, data) {
 var few = database.slice(0, 50)
 
 var allSong = getAllArtistStats(few)
-console.log(allSong)
 createParalleleCoordinates(SONG_KEYS, allSong)
+
+/* EVENT ON COLOR FILTER SELECTION CHANGE */
+colorFilter.addEventListener("change", (test) => {
+    colorBase = test.target.value
+    createParalleleCoordinates(SONG_KEYS, allSong)
+})
