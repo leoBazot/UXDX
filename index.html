@@ -4,79 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="/public/favicon.ico">
-    <!-- <script src="https://d3js.org/d3.v4.js"></script> -->
-    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://d3js.org/d3.v5.js"></script>
     <!-- <link rel="stylesheet" type="text/css" href="assets/main.css" /> -->
     <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
-    <!-- <title>Parallel coordinate</title> -->
+    <title>Parallel coordinate</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <title>Nutrient Database Explorer</title>
 </head>
 
 <body>
+    <select id="colorFilter">
+    </select>
     <div id="my_dataviz"></div>
-    <!-- <div id="header">
-        <h1>Nutrient Explorer</h1>
-        <button title="Zoom in on selected data" id="keep-data" disabled="disabled">Keep</button>
-        <button title="Remove selected data" id="exclude-data" disabled="disabled">Exclude</button>
-        <button title="Export data as CSV" id="export-data">Export</button>
-        <div class="controls">
-            <strong id="rendered-count"></strong>/<strong
-                id="selected-count"></strong> -->
-    <!--<strong id="data-count"></strong>-->
-    <!-- <div class="fillbar">
-        <div id="selected-bar">
-            <div id="rendered-bar">&nbsp;</div>
-        </div>
-    </div>
-    Lines at <strong id="opacity"></strong> opacity.
-    <span class="settings">
-        <button id="hide-ticks">Hide Ticks</button>
-        <button id="show-ticks" disabled="disabled">Show Ticks</button>
-        <button id="dark-theme">Dark</button>
-        <button id="light-theme" disabled="disabled">Light</button>
-    </span>
-    </div>
-    <div style="clear:both;"></div>
-    </div>
-    <div id="chart">
-        <canvas id="background"></canvas>
-        <canvas id="foreground"></canvas>
-        <canvas id="highlight"></canvas>
-        <svg></svg>
-    </div>
-    <div id="wrap">
-        <div class="third" id="controls">
-
-            <div class="little-box">
-                <h3>Controls</h3>
-                <p>
-                    <strong>Brush</strong>: Drag vertically along an axis.<br />
-                    <strong>Remove Brush</strong>: Tap the axis background.<br />
-                    <strong>Reorder Axes</strong>: Drag a label horizontally.<br />
-                    <strong>Invert Axis</strong>: Tap an axis label.<br />
-                    <strong>Remove Axis</strong>: Drag axis label to the left edge.<br />
-                </p>
-            </div>
-        </div>
-        <div class="third">
-            <small> -->
-    <!--Last rendered <strong id="render-speed"></strong> lines-->
-    <!-- </small>
-            <h3>Food Groups</h3>
-            <p id="legend">
-            </p>
-        </div>
-        <div class="third">
-            <h3>Sample of 25 entries <input type="text" id="search" placeholder="Search Foods..."></input></h3>
-            <p id="food-list">
-            </p>
-        </div>
-    </div> -->
+    <script src="https://d3js.org/d3-scale-chromatic.v1.js"></script>
     <script src="https://underscorejs.org/underscore.js"></script>
-    <script type="module" src="./src/parco.js"></script>
+    <script type="module" src="./src/simple.js"></script>
 </body>
-<!-- <body> <div id="my_dataviz"></div> </body> -->
-
 
 </html>
