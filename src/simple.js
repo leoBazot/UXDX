@@ -55,28 +55,6 @@ function getArtistByName(name) {
     return database.find(artist => artist.name === name)
 }
 
-function createSongInfos(artist, album, song, genres) {
-    var result = []
-    genres.forEach(genre => {
-        let tmp = {}
-        tmp.artist = artist.name
-        tmp.country = getCountry(artist)
-        tmp.age = getAge(artist)
-        tmp.language = song.language === "" ? song.language_detect : song.language
-        if (tmp.language === "") {
-            tmp.language = "UNKNOWN"
-        }
-
-        tmp.bpm = song.bpm === "" ? "UNKNOWN" : song.bpm
-        tmp.genre = genre
-        tmp.releaseDate = album.releaseDate ?? album.publicationDate
-        tmp.nbExplicit = song.explicit_content_lyrics ?? 0
-        result.push(tmp)
-    })
-
-    return result
-}
-
 function getSongsByArtist(artist) {
     var result = []
     let genres = getGenres(artist) ?? ["UNKNOWN"]
