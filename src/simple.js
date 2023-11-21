@@ -1,8 +1,7 @@
 import { getAllArtists, getAllArtistsTmp } from './wasabi.js'
+import { getAllArtistStats, getAllNames, getAllCountry, getAllGenres } from './utils.js'
 
 var database = await getAllArtistsTmp();
-
-const CURRENT_YEAR = new Date().getFullYear()
 
 const SONG_KEYS = ["artist", "country", "age", "genre", "nbExplicit", "deezerFans"]
 
@@ -20,102 +19,7 @@ var mode = MODE.ALL
 // default is age
 var colorBase = SONG_KEYS[2]
 
-/* UTILS */
-function getGenres(artist) {
-    return artist.genres?.length === 0 ? artist.dbp_genre : artist.genres
-}
 
-function getAge(artist) {
-    var result = 0
-    var beginSplit = artist.lifeSpan?.begin?.split("-")
-    var endSplit = artist.lifeSpan?.end?.split("-")
-    if (beginSplit?.length != 1 || endSplit?.length != 1) {
-        result = beginSplit[0] === "" ? 0 : (artist.lifeSpan?.ended ? endSplit[0] - beginSplit[0] : CURRENT_YEAR - beginSplit[0])
-    } else {
-        result = artist.lifeSpan?.begin === "" ? 0 : (artist.lifeSpan?.ended ? artist.lifeSpan?.end : CURRENT_YEAR) - artist.lifeSpan?.begin
-    }
-    return result
-}
-
-function getCountry(artist) {
-    return artist.location?.country ?? "UNKNOWN"
-}
-
-function getAllNames(data) {
-    let result = []
-    data.forEach(d => {
-        if (!result.includes(d.artist)) {
-            result.push(d.artist)
-        }
-    })
-    return result
-}
-
-function getArtistByName(name) {
-    return database.find(artist => artist.name === name)
-}
-
-function getSongsByArtist(artist) {
-    var result = []
-    let genres = getGenres(artist) ?? ["UNKNOWN"]
-
-    genres?.forEach(g => {
-        var stats = {}
-        stats.artist = artist.name
-        var c = getCountry(artist)
-        stats.country = c === "" ? "UNKNOWN" : c
-        stats.age = getAge(artist)
-        stats.genre = g
-        stats.nbExplicit = artist.albums.map(album => album.songs.map(song => song.explicit_content_lyrics ?? 0)).flat().reduce((a, b) => a + b, 0)
-        stats.deezerFans = artist.deezerFans ?? 0
-
-        result.push(stats)
-    })
-
-    return result
-}
-
-
-
-function getAllArtistStats(artists) {
-    let result = []
-    artists.forEach(artist => {
-        result = result.concat(getSongsByArtist(artist))
-    })
-
-    return result
-}
-
-function getAllLanguages(data) {
-    let result = []
-    data.forEach(artist => {
-        if (!result.includes(artist.language)) {
-            result.push(artist.language)
-        }
-    })
-
-    return result
-}
-
-function getAllGenres(data) {
-    let result = []
-    data.forEach(artist => {
-        if (!result.includes(artist.genre)) {
-            result.push(artist.genre)
-        }
-    })
-    return result
-}
-
-function getAllCountry(data) {
-    let result = []
-    data.forEach(artist => {
-        if (!result.includes(artist.country)) {
-            result.push(artist.country)
-        }
-    })
-    return result
-}
 
 /* FILL COLOR FILTER LIST */
 var colorFilter = document.getElementById("colorFilter")
@@ -137,10 +41,6 @@ SONG_KEYS.forEach(key => {
 const margin = { top: 30, right: 10, bottom: 10, left: 0 },
     width = (SONG_KEYS.length * 200) - margin.left - margin.right,
     height = 800 - margin.top - margin.bottom;
-
-
-
-
 
 function createParalleleCoordinates(dimensions, data) {
     d3.select("#my_dataviz > *").remove()
