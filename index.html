@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <link rel="icon" href="/public/favicon.ico">
     <script src="https://d3js.org/d3.v5.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/sankey.js"></script>
+
     <!-- <link rel="stylesheet" type="text/css" href="assets/main.css" /> -->
     <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
     <title>Parallel coordinate</title>
@@ -12,14 +14,31 @@
 </head>
 
 <body>
+    <h3>Léo Bazot</h3><br/>
     <select id="colorFilter">
     </select>
     <div id="my_dataviz"></div>
+    <h3>Liam Buand</h3><br/>
     <div id="scatter"></div>
+    <h3>Hugo Mouchan</h3><br/>
+    <div id="my_dataviz_sankey"></div>
     <script src="https://d3js.org/d3-scale-chromatic.v1.js"></script>
     <script src="https://underscorejs.org/underscore.js"></script>
     <script type="module" src="./src/scatter.js"></script>
     <script type="module" src="./src/simple.js"></script>
+    <script type="module" src="src/sankey.js"></script>
+
 </body>
 
 </html>
+
+<style>
+    .link {
+        fill: none;
+        stroke: #000;
+        stroke-opacity: .2;
+    }
+    .link:hover {
+        stroke-opacity: .5;
+    }
+</style>
