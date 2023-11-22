@@ -17,7 +17,7 @@ var sankey = d3.sankey()
     .size([width, height]);
 
 // Récupération des données JSON
-d3.json("../data2.json").then(function (graph) {
+d3.json("./data2.json").then(function (graph) {
 
     sankey.nodes(graph.nodes)
         .links(graph.links)
