@@ -170,7 +170,10 @@ d3.json("./data2.json").then(function (graph) {
 
     //deleteColumn("BPM")
 
-});
+}).catch(error => {
+            console.log("Fetch error");
+            console.log(error);
+        });
 
 
 
